@@ -6,4 +6,6 @@ import kotlinx.coroutines.flow.Flow
 interface RingtoneRepository {
     fun getRingtones(): Flow<List<Ringtone>>
     fun searchRingtones(query: String): Flow<List<Ringtone>>
+    fun getFavorites(): Flow<List<Ringtone>>
+    fun getDownloads(): Flow<List<Ringtone>>
 }

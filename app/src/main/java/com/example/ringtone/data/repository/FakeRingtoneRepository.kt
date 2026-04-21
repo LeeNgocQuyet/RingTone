@@ -17,4 +17,8 @@ class FakeRingtoneRepository : RingtoneRepository {
     override fun searchRingtones(query: String): Flow<List<Ringtone>> {
         return flowOf(fakeRingtones.filter { it.title.contains(query, ignoreCase = true) })
     }
+
+    override fun getFavorites(): Flow<List<Ringtone>> = flowOf(fakeRingtones.take(2))
+    
+    override fun getDownloads(): Flow<List<Ringtone>> = flowOf(fakeRingtones.takeLast(1))
 }

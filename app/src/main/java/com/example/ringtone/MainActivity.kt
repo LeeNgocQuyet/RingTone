@@ -21,15 +21,18 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.ringtone.data.player.RingtonePlayer
 import com.example.ringtone.data.repository.FakeRingtoneRepository
-import com.example.ringtone.domain.repository.RingtoneRepository
 import com.example.ringtone.ui.home.HomeScreen
 import com.example.ringtone.ui.home.HomeViewModel
+import com.example.ringtone.ui.list.RingtoneListScreen
+import com.example.ringtone.ui.list.RingtoneListViewModel
 import com.example.ringtone.ui.navigation.Screen
 import com.example.ringtone.ui.navigation.bottomNavItems
 import com.example.ringtone.ui.profile.ProfileScreen
@@ -41,27 +44,26 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // Khởi tạo repository ở cấp Activity (hoặc Application)
         val repository = FakeRingtoneRepository()
 
         enableEdgeToEdge()
         setContent {
             val context = LocalContext.current
             
-            // Sử dụng Factory để truyền repository vào ViewModel
             val factory = object : ViewModelProvider.Factory {
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
                     return when {
                         modelClass.isAssignableFrom(HomeViewModel::class.java) -> HomeViewModel(repository) as T
                         modelClass.isAssignableFrom(SearchViewModel::class.java) -> SearchViewModel(repository) as T
+                        modelClass.isAssignableFrom(RingtoneListViewModel::class.java) -> RingtoneListViewModel(repository) as T
                         else -> throw IllegalArgumentException("Unknown ViewModel class")
                     }
                 }
             }
 
-            // Sử dụng hàm viewModel() để đảm bảo ViewModel tồn tại qua quá trình xoay màn hình
             val homeViewModel: HomeViewModel = viewModel(factory = factory)
             val searchViewModel: SearchViewModel = viewModel(factory = factory)
+            val listViewModel: RingtoneListViewModel = viewModel(factory = factory)
 
             val player = remember { RingtonePlayer(context) }
             
@@ -75,6 +77,7 @@ class MainActivity : ComponentActivity() {
                 MainApp(
                     homeViewModel = homeViewModel,
                     searchViewModel = searchViewModel,
+                    listViewModel = listViewModel,
                     onPlayClick = { ringtone -> player.play(ringtone.audioUrl) }
                 )
             }
@@ -86,6 +89,7 @@ class MainActivity : ComponentActivity() {
 fun MainApp(
     homeViewModel: HomeViewModel,
     searchViewModel: SearchViewModel,
+    listViewModel: RingtoneListViewModel,
     onPlayClick: (com.example.ringtone.domain.model.Ringtone) -> Unit
 ) {
     val navController = rememberNavController()
@@ -126,7 +130,21 @@ fun MainApp(
                 SearchScreen(searchViewModel, onPlayClick) 
             }
             composable(Screen.Profile.route) { 
-                ProfileScreen() 
+                ProfileScreen(onNavigateToList = { type ->
+                    navController.navigate(Screen.RingtoneList.createRoute(type))
+                }) 
+            }
+            composable(
+                route = Screen.RingtoneList.route,
+                arguments = listOf(navArgument("type") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val type = backStackEntry.arguments?.getString("type") ?: ""
+                RingtoneListScreen(
+                    type = type,
+                    viewModel = listViewModel,
+                    onBackClick = { navController.popBackStack() },
+                    onPlayClick = onPlayClick
+                )
             }
         }
     }

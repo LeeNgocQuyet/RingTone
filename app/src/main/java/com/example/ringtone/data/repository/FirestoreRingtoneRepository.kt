@@ -24,4 +24,12 @@ class FirestoreRingtoneRepository : RingtoneRepository {
         // Implement search logic
         emit(emptyList())
     }
+
+    override fun getFavorites(): Flow<List<Ringtone>> {
+        TODO("Not yet implemented")
+    }
+
+    override fun getDownloads(): Flow<List<Ringtone>> {
+        TODO("Not yet implemented")
+    }
 }

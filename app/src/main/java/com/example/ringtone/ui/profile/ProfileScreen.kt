@@ -91,7 +91,7 @@ fun ProfileSwitchItem(
 
 
 @Composable
-fun ProfileScreen() {
+fun ProfileScreen(onNavigateToList: (String) -> Unit = {}) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -101,21 +101,22 @@ fun ProfileScreen() {
     ) {
         Spacer(modifier = Modifier.height(48.dp))
         Row(
-
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
         ) {
             Image(
                 painter = painterResource(id = R.drawable.plankavatar),
                 contentDescription = "Profile Image",
                 modifier = Modifier
-                    .size(120.dp)
+                    .size(80.dp)
                     .clip(CircleShape),
                 contentScale = ContentScale.Crop
             )
-            Column(){
+            Spacer(modifier = Modifier.width(16.dp))
+            Column {
                 Text(
-                    text = "user",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.secondary
+                    text = "User Name",
+                    style = MaterialTheme.typography.titleLarge
                 )
                 Text(
                     text = "user@example.com",
@@ -126,7 +127,7 @@ fun ProfileScreen() {
         }
 
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
 
         var notificationEnabled by remember { mutableStateOf(true) }
@@ -134,12 +135,14 @@ fun ProfileScreen() {
         Column {
             ProfileItem(
                 icon = Icons.Default.List,
-                title = "Download"
+                title = "Download",
+                onClick = { onNavigateToList("download") }
             )
 
             ProfileItem(
                 icon = Icons.Default.Favorite,
-                title = "Favorites"
+                title = "Favorites",
+                onClick = { onNavigateToList("favorites") }
             )
 
             ProfileSwitchItem(
@@ -155,17 +158,14 @@ fun ProfileScreen() {
             )
             ProfileItem(
                 icon = Icons.Default.Info,
-                title = "policy"
+                title = "Policy"
             )
         }
     }
 }
+
 @Preview(showBackground = true)
 @Composable
 fun ProfileScreenPreview() {
     ProfileScreen()
 }
-
-
-
-
