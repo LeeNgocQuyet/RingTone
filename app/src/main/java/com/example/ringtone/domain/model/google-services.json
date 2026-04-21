@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "692793462152",
+    "project_id": "ringtone-47b8a",
+    "storage_bucket": "ringtone-47b8a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:692793462152:android:b8a2f3e80f3fe62db63e3d",
+        "android_client_info": {
+          "package_name": "com.example.ringtone"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAR-VkWxWHt55h-T4i0dA0FnOEmGeWc7Ys"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
