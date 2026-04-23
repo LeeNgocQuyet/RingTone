@@ -1,23 +1,30 @@
 package com.example.ringtone.ui.navigation
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.ui.graphics.vector.ImageVector
+import kotlinx.serialization.Serializable
 
-sealed class Screen(val route: String, val title: String, val icon: ImageVector) {
-    object Home : Screen("home", "Home", Icons.Default.Home)
-    object Search : Screen("search", "Search", Icons.Default.Search)
-    object Profile : Screen("profile", "Profile", Icons.Default.Person)
-    object RingtoneList : Screen("ringtone_list/{type}", "List", Icons.Default.List) {
-        fun createRoute(type: String) = "ringtone_list/$type"
-    }
+@Serializable
+sealed interface Screen {
+    @Serializable
+    data object Home : Screen
+    
+    @Serializable
+    data object Download : Screen
+    
+    @Serializable
+    data object Category : Screen
+    
+    @Serializable
+    data object Playlist : Screen
+
+    @Serializable
+    data object Search : Screen
+
+    @Serializable
+    data class Audio(val ringtoneId: String) : Screen
+
+    @Serializable
+    data class AudioInfo(val ringtoneId: String) : Screen
+
+    @Serializable
+    data class List(val type: String, val id: String? = null) : Screen
 }
-
-val bottomNavItems = listOf(
-    Screen.Home,
-    Screen.Search,
-    Screen.Profile
-)

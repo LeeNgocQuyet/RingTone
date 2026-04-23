@@ -2,42 +2,30 @@ package com.example.ringtone
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavDestination.Companion.hierarchy
-import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.NavType
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
-import com.example.ringtone.data.player.RingtonePlayer
 import com.example.ringtone.data.repository.FakeRingtoneRepository
-import com.example.ringtone.ui.home.HomeScreen
-import com.example.ringtone.ui.home.HomeViewModel
-import com.example.ringtone.ui.list.RingtoneListScreen
-import com.example.ringtone.ui.list.RingtoneListViewModel
+import com.example.ringtone.player.RingtonePlayer
+import com.example.ringtone.ui.navigation.AppNavGraph
 import com.example.ringtone.ui.navigation.Screen
-import com.example.ringtone.ui.navigation.bottomNavItems
-import com.example.ringtone.ui.profile.ProfileScreen
-import com.example.ringtone.ui.search.SearchScreen
-import com.example.ringtone.ui.search.SearchViewModel
+import com.example.ringtone.ui.screen.home.HomeViewModel
+import com.example.ringtone.ui.screen.list.RingtoneListViewModel
+import com.example.ringtone.ui.screen.search.SearchViewModel
 import com.example.ringtone.ui.theme.RingToneTheme
 
 class MainActivity : ComponentActivity() {
@@ -50,13 +38,16 @@ class MainActivity : ComponentActivity() {
         setContent {
             val context = LocalContext.current
             
-            val factory = object : ViewModelProvider.Factory {
-                override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                    return when {
-                        modelClass.isAssignableFrom(HomeViewModel::class.java) -> HomeViewModel(repository) as T
-                        modelClass.isAssignableFrom(SearchViewModel::class.java) -> SearchViewModel(repository) as T
-                        modelClass.isAssignableFrom(RingtoneListViewModel::class.java) -> RingtoneListViewModel(repository) as T
-                        else -> throw IllegalArgumentException("Unknown ViewModel class")
+            val factory = remember {
+                object : ViewModelProvider.Factory {
+                    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                        return when {
+                            modelClass.isAssignableFrom(HomeViewModel::class.java) -> HomeViewModel(repository) as T
+                            modelClass.isAssignableFrom(SearchViewModel::class.java) -> SearchViewModel(repository) as T
+                            modelClass.isAssignableFrom(RingtoneListViewModel::class.java) -> RingtoneListViewModel(repository) as T
+                            // TODO: Thêm DownloadViewModel, CategoryViewModel... khi bạn tạo file
+                            else -> throw IllegalArgumentException("Unknown ViewModel class")
+                        }
                     }
                 }
             }
@@ -73,79 +64,90 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
+            val backstack = rememberSaveableMutableStateListOf<Screen>(Screen.Home)
+
             RingToneTheme {
-                MainApp(
-                    homeViewModel = homeViewModel,
-                    searchViewModel = searchViewModel,
-                    listViewModel = listViewModel,
-                    onPlayClick = { ringtone -> player.play(ringtone.audioUrl) }
-                )
+                Scaffold(
+                    bottomBar = {
+                        // Hiển thị BottomBar cho 4 màn hình chính
+                        if (backstack.last() is Screen.Home || backstack.last() is Screen.Download || 
+                            backstack.last() is Screen.Category || backstack.last() is Screen.Playlist) {
+                            NavigationBar {
+                                NavigationBarItem(
+                                    icon = { Icon(Icons.Default.Home, contentDescription = null) },
+                                    label = { Text("Home") },
+                                    selected = backstack.last() is Screen.Home,
+                                    onClick = { 
+                                        backstack.clear()
+                                        backstack.add(Screen.Home) 
+                                    }
+                                )
+                                NavigationBarItem(
+                                    icon = { Icon(Icons.Default.Download, contentDescription = null) },
+                                    label = { Text("Download") },
+                                    selected = backstack.last() is Screen.Download,
+                                    onClick = {
+                                        backstack.clear()
+                                        backstack.add(Screen.Download)
+                                    }
+                                )
+                                NavigationBarItem(
+                                    icon = { Icon(Icons.Default.Category, contentDescription = null) },
+                                    label = { Text("Category") },
+                                    selected = backstack.last() is Screen.Category,
+                                    onClick = {
+                                        backstack.clear()
+                                        backstack.add(Screen.Category)
+                                    }
+                                )
+                                NavigationBarItem(
+                                    icon = { Icon(Icons.Default.List, contentDescription = null) },
+                                    label = { Text("Playlist") },
+                                    selected = backstack.last() is Screen.Playlist,
+                                    onClick = {
+                                        backstack.clear()
+                                        backstack.add(Screen.Playlist)
+                                    }
+                                )
+                            }
+                        }
+                    }
+                ) { innerPadding ->
+                    Box(modifier = Modifier.padding(innerPadding)) {
+                        AppNavGraph(
+                            backStack = backstack,
+                            homeViewModel = homeViewModel,
+                            searchViewModel = searchViewModel,
+                            downloadViewModel = null, // Update when ViewModel is ready
+                            categoryViewModel = null,
+                            playlistViewModel = null,
+                            audioViewModel = null,
+                            audioInfoViewModel = null,
+                            listViewModel = listViewModel,
+                            onNavigate = { screen -> backstack.add(screen) },
+                            onPopBack = { if (backstack.size > 1) backstack.removeAt(backstack.size - 1) },
+                            onPlayClick = { ringtone -> player.play(ringtone.audioUrl) }
+                        )
+                    }
+                }
+            }
+
+            BackHandler(enabled = backstack.size > 1) {
+                backstack.removeAt(backstack.size - 1)
             }
         }
     }
 }
 
 @Composable
-fun MainApp(
-    homeViewModel: HomeViewModel,
-    searchViewModel: SearchViewModel,
-    listViewModel: RingtoneListViewModel,
-    onPlayClick: (com.example.ringtone.domain.model.Ringtone) -> Unit
-) {
-    val navController = rememberNavController()
-
-    Scaffold(
-        bottomBar = {
-            NavigationBar {
-                val navBackStackEntry by navController.currentBackStackEntryAsState()
-                val currentDestination = navBackStackEntry?.destination
-                bottomNavItems.forEach { screen ->
-                    NavigationBarItem(
-                        icon = { Icon(screen.icon, contentDescription = null) },
-                        label = { Text(screen.title) },
-                        selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
-                        onClick = {
-                            navController.navigate(screen.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        }
-                    )
-                }
-            }
-        }
-    ) { innerPadding ->
-        NavHost(
-            navController = navController,
-            startDestination = Screen.Home.route,
-            modifier = Modifier.padding(innerPadding)
-        ) {
-            composable(Screen.Home.route) { 
-                HomeScreen(homeViewModel, onPlayClick) 
-            }
-            composable(Screen.Search.route) { 
-                SearchScreen(searchViewModel, onPlayClick) 
-            }
-            composable(Screen.Profile.route) { 
-                ProfileScreen(onNavigateToList = { type ->
-                    navController.navigate(Screen.RingtoneList.createRoute(type))
-                }) 
-            }
-            composable(
-                route = Screen.RingtoneList.route,
-                arguments = listOf(navArgument("type") { type = NavType.StringType })
-            ) { backStackEntry ->
-                val type = backStackEntry.arguments?.getString("type") ?: ""
-                RingtoneListScreen(
-                    type = type,
-                    viewModel = listViewModel,
-                    onBackClick = { navController.popBackStack() },
-                    onPlayClick = onPlayClick
-                )
-            }
-        }
+fun <T> rememberSaveableMutableStateListOf(vararg elements: T): MutableList<T> {
+    val saver = remember {
+        androidx.compose.runtime.saveable.listSaver<MutableList<T>, T>(
+            save = { it.toList() },
+            restore = { it.toMutableStateList() }
+        )
+    }
+    return rememberSaveable(saver = saver) {
+        elements.toList().toMutableStateList()
     }
 }
