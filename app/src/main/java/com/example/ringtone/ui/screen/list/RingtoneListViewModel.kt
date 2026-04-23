@@ -1,4 +1,4 @@
-package com.example.ringtone.ui.list
+package com.example.ringtone.ui.screen.list
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
