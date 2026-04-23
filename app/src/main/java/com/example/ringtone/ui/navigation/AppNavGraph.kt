@@ -5,10 +5,16 @@ import androidx.compose.runtime.Composable
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.ui.NavDisplay
 import com.example.ringtone.domain.model.Ringtone
+import com.example.ringtone.ui.screen.category.CategoryScreen
+import com.example.ringtone.ui.screen.category.CategoryViewModel
+import com.example.ringtone.ui.screen.download.DownloadScreen
+import com.example.ringtone.ui.screen.download.DownloadViewModel
 import com.example.ringtone.ui.screen.home.HomeScreen
 import com.example.ringtone.ui.screen.home.HomeViewModel
 import com.example.ringtone.ui.screen.list.RingtoneListScreen
 import com.example.ringtone.ui.screen.list.RingtoneListViewModel
+import com.example.ringtone.ui.screen.playlist.PlaylistScreen
+import com.example.ringtone.ui.screen.playlist.PlaylistViewModel
 import com.example.ringtone.ui.screen.search.SearchScreen
 import com.example.ringtone.ui.screen.search.SearchViewModel
 
@@ -17,11 +23,11 @@ fun AppNavGraph(
     backStack: List<Screen>,
     homeViewModel: HomeViewModel,
     searchViewModel: SearchViewModel,
-    downloadViewModel: Any?,
-    categoryViewModel: Any?,
-    playlistViewModel: Any?,
-    audioViewModel: Any?,
-    audioInfoViewModel: Any?,
+    downloadViewModel: DownloadViewModel,
+    categoryViewModel: CategoryViewModel,
+    playlistViewModel: PlaylistViewModel,
+    audioViewModel: Any?, // Cần cập nhật khi có AudioViewModel
+    audioInfoViewModel: Any?, // Cần cập nhật khi có AudioInfoViewModel
     listViewModel: RingtoneListViewModel,
     onNavigate: (Screen) -> Unit,
     onPopBack: () -> Unit,
@@ -37,30 +43,46 @@ fun AppNavGraph(
                     viewModel = homeViewModel,
                     onSearchClick = { onNavigate(Screen.Search) },
                     onRingtoneClick = { id -> onNavigate(Screen.Audio(id)) },
-                    onSettingsClick = { },
-                    onSetRingtone = { },
-                    onToggleFavorite = { },
+                    onSettingsClick = { /* Navigate to Settings or show bottom sheet */ },
+                    onSetRingtone = { /* Handle set ringtone logic */ },
+                    onToggleFavorite = { ringtoneId -> homeViewModel.toggleFavorite(ringtoneId) }
                 )
             }
             Screen.Download -> NavEntry(Screen.Download) {
-                Text("Download Screen")
+                DownloadScreen(
+                    viewModel = downloadViewModel,
+                    onSettingsClick = { /* Handle settings */ },
+                    onMoreClick = { onNavigate(Screen.List("download")) },
+                    onRingtoneClick = { id -> onNavigate(Screen.Audio(id)) }
+                )
             }
             Screen.Category -> NavEntry(Screen.Category) {
-                Text("Category Screen")
+                CategoryScreen(
+                    viewModel = categoryViewModel,
+                    onSettingsClick = { /* Handle settings */ },
+                    onCategoryClick = { id -> onNavigate(Screen.List("category", id)) }
+                )
             }
             Screen.Playlist -> NavEntry(Screen.Playlist) {
-                Text("Playlist Screen")
+                PlaylistScreen(
+                    viewModel = playlistViewModel,
+                    onSettingsClick = { /* Handle settings */ },
+                    onDownloadAudioClick = { onNavigate(Screen.Download) }
+                )
             }
             Screen.Search -> NavEntry(Screen.Search) {
                 SearchScreen(
                     viewModel = searchViewModel,
-                    onPlayClick = onPlayClick
+                    onBackClick = onPopBack,
+                    onRingtoneClick = { id -> onNavigate(Screen.Audio(id)) }
                 )
             }
             is Screen.Audio -> NavEntry(screen) {
+                // Sẽ thay bằng AudioScreen khi bạn tạo file
                 Text("Audio Playing: ${screen.ringtoneId}")
             }
             is Screen.AudioInfo -> NavEntry(screen) {
+                // Sẽ thay bằng AudioInfoScreen khi bạn tạo file
                 Text("Audio Info for: ${screen.ringtoneId}")
             }
             is Screen.List -> NavEntry(screen) {

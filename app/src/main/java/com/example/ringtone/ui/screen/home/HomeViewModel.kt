@@ -11,6 +11,9 @@ import kotlinx.coroutines.launch
 
 data class HomeUiState(
     val ringtones: List<Ringtone> = emptyList(),
+    val categories: List<String> = listOf("All", "Nature", "Electronic", "Classical", "Pop", "Rock"),
+    val selectedCategory: String = "All",
+    val favoriteIds: Set<String> = emptySet(),
     val isLoading: Boolean = false
 )
 
@@ -32,5 +35,19 @@ class HomeViewModel(private val repository: RingtoneRepository) : ViewModel() {
                 )
             }
         }
+    }
+
+    fun onCategorySelected(category: String) {
+        _uiState.value = _uiState.value.copy(selectedCategory = category)
+    }
+
+    fun toggleFavorite(ringtoneId: String) {
+        val currentFavorites = _uiState.value.favoriteIds
+        val newFavorites = if (currentFavorites.contains(ringtoneId)) {
+            currentFavorites - ringtoneId
+        } else {
+            currentFavorites + ringtoneId
+        }
+        _uiState.value = _uiState.value.copy(favoriteIds = newFavorites)
     }
 }

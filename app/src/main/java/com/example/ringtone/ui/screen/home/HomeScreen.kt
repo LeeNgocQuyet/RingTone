@@ -1,6 +1,5 @@
 package com.example.ringtone.ui.screen.home
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -22,13 +21,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.ringtone.R
 import com.example.ringtone.domain.model.Ringtone
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -39,7 +35,7 @@ fun HomeScreen(
     onSettingsClick: () -> Unit,
     onRingtoneClick: (String) -> Unit,
     onSetRingtone: (Ringtone) -> Unit,
-    onToggleFavorite: (Ringtone) -> Unit
+    onToggleFavorite: (String) -> Unit // Sửa: Nhận String (ID) thay vì Ringtone
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -49,7 +45,8 @@ fun HomeScreen(
         onSettingsClick = onSettingsClick,
         onRingtoneClick = onRingtoneClick,
         onSetRingtone = onSetRingtone,
-        onToggleFavorite = onToggleFavorite
+        onToggleFavorite = onToggleFavorite,
+        onCategorySelected = { viewModel.onCategorySelected(it) }
     )
 }
 
@@ -61,9 +58,11 @@ fun HomeScaffold(
     onSettingsClick: () -> Unit,
     onRingtoneClick: (String) -> Unit,
     onSetRingtone: (Ringtone) -> Unit,
-    onToggleFavorite: (Ringtone) -> Unit
+    onToggleFavorite: (String) -> Unit,
+    onCategorySelected: (String) -> Unit
 ) {
     Scaffold(
+        containerColor = Color.Black,
         topBar = {
             HomeTopBar(onSearchClick, onSettingsClick)
         }
@@ -75,7 +74,8 @@ fun HomeScaffold(
             uiState = uiState,
             onRingtoneClick = onRingtoneClick,
             onSetRingtone = onSetRingtone,
-            onToggleFavorite = onToggleFavorite
+            onToggleFavorite = onToggleFavorite,
+            onCategorySelected = onCategorySelected
         )
     }
 }
@@ -84,20 +84,21 @@ fun HomeScaffold(
 @Composable
 fun HomeTopBar(onSearchClick: () -> Unit, onSettingsClick: () -> Unit) {
     TopAppBar(
+        colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Black),
         title = {
             Text(
                 text = "RingTone",
-                color = Color(0xFF4CAF50), // Green text
+                color = Color(0xFF4CAF50),
                 fontWeight = FontWeight.ExtraBold,
                 fontSize = 24.sp
             )
         },
         actions = {
             IconButton(onClick = onSearchClick) {
-                Icon(Icons.Default.Search, contentDescription = "Search")
+                Icon(Icons.Default.Search, contentDescription = "Search", tint = Color.White)
             }
             IconButton(onClick = onSettingsClick) {
-                Icon(Icons.Default.Settings, contentDescription = "Settings")
+                Icon(Icons.Default.Settings, contentDescription = "Settings", tint = Color.White)
             }
         }
     )
@@ -109,30 +110,31 @@ fun HomeContent(
     uiState: HomeUiState,
     onRingtoneClick: (String) -> Unit,
     onSetRingtone: (Ringtone) -> Unit,
-    onToggleFavorite: (Ringtone) -> Unit
+    onToggleFavorite: (String) -> Unit,
+    onCategorySelected: (String) -> Unit
 ) {
     LazyColumn(
-        modifier = modifier,
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+        modifier = modifier.padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(24.dp),
+        contentPadding = PaddingValues(vertical = 16.dp)
     ) {
-        // Featured Section
+        item { FeaturedCard() }
+
         item {
-            FeaturedCard()
+            CategorySelector(
+                categories = uiState.categories,
+                selectedCategory = uiState.selectedCategory,
+                onCategorySelected = onCategorySelected
+            )
         }
 
-        // Category Section
-        item {
-            CategorySelector()
-        }
-
-        // Ringtone List
         items(uiState.ringtones) { ringtone ->
             RingtoneListItem(
                 ringtone = ringtone,
+                isFavorite = uiState.favoriteIds.contains(ringtone.id),
                 onClick = { onRingtoneClick(ringtone.id) },
                 onSetClick = { onSetRingtone(ringtone) },
-                onFavoriteToggle = { onToggleFavorite(ringtone) }
+                onFavoriteToggle = { onToggleFavorite(ringtone.id) }
             )
         }
     }
@@ -162,69 +164,45 @@ fun FeaturedCard() {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "Top Ringtone",
-                        color = Color.White,
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = "Best of the week",
-                        color = Color.White.copy(alpha = 0.7f),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+                    Text(text = "Top Ringtone", color = Color.White, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                    Text(text = "Best of the week", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodyMedium)
                     Spacer(modifier = Modifier.height(16.dp))
                     Button(
                         onClick = { },
                         colors = ButtonDefaults.buttonColors(containerColor = Color.White),
                         shape = RoundedCornerShape(50)
                     ) {
-                        Icon(
-                            Icons.Default.PlayArrow,
-                            contentDescription = null,
-                            tint = Color.Black
-                        )
+                        Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Color.Black)
                         Spacer(modifier = Modifier.width(4.dp))
                         Text("Play", color = Color.Black)
                     }
                 }
-
-                // Vinyl Disc Style Image (Placeholder)
-                Box(
-                    modifier = Modifier
-                        .size(100.dp)
-                        .clip(CircleShape)
-                        .background(Color.Black),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(30.dp)
-                            .clip(CircleShape)
-                            .background(Color.DarkGray)
-                    )
+                Box(modifier = Modifier.size(100.dp).clip(CircleShape).background(Color.Black), contentAlignment = Alignment.Center) {
+                    Box(modifier = Modifier.size(30.dp).clip(CircleShape).background(Color.DarkGray))
                 }
             }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CategorySelector() {
-    val categories = listOf("All", "Nature", "Electronic", "Classical", "Pop", "Rock")
-    var selectedCategory by remember { mutableStateOf("All") }
-
-    LazyRow(
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
+fun CategorySelector(
+    categories: List<String>,
+    selectedCategory: String,
+    onCategorySelected: (String) -> Unit
+) {
+    LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         items(categories) { category ->
             FilterChip(
                 selected = selectedCategory == category,
-                onClick = { selectedCategory = category },
+                onClick = { onCategorySelected(category) },
                 label = { Text(category) },
                 colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = Color(0xFFC8E6C9), // Light Green
-                    selectedLabelColor = Color(0xFF2E7D32)
+                    selectedContainerColor = Color(0xFFC8E6C9),
+                    selectedLabelColor = Color(0xFF2E7D32),
+                    labelColor = Color.White,
+                    containerColor = Color(0xFF1E1E1E)
                 ),
                 border = null,
                 shape = RoundedCornerShape(50)
@@ -236,61 +214,35 @@ fun CategorySelector() {
 @Composable
 fun RingtoneListItem(
     ringtone: Ringtone,
+    isFavorite: Boolean,
     onClick: () -> Unit,
     onSetClick: () -> Unit,
     onFavoriteToggle: () -> Unit
 ) {
-    var isFavorite by remember { mutableStateOf(false) }
-
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() },
+        modifier = Modifier.fillMaxWidth().clickable { onClick() },
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Thumbnail
-        Box(
-            modifier = Modifier
-                .size(56.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(Color.DarkGray)
-        )
-
+        Box(modifier = Modifier.size(56.dp).clip(RoundedCornerShape(12.dp)).background(Color(0xFF1E1E1E)))
         Spacer(modifier = Modifier.width(16.dp))
-
-        // Title + Duration
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = ringtone.title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = ringtone.duration,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-            )
+            Text(text = ringtone.title, color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(text = ringtone.duration, color = Color.Gray, style = MaterialTheme.typography.bodySmall)
         }
-
-        // Actions
         Button(
             onClick = onSetClick,
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7E57C2)), // Purple
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7E57C2)),
             modifier = Modifier.height(32.dp),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp),
             shape = RoundedCornerShape(50)
         ) {
-            Text("Set", fontSize = 12.sp)
+            Text("Set", fontSize = 12.sp, fontWeight = FontWeight.Bold)
         }
-
-        IconButton(onClick = {
-            isFavorite = !isFavorite
-            onFavoriteToggle()
-        }) {
+        IconButton(onClick = onFavoriteToggle) {
             Icon(
                 imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                contentDescription = "Favorite",
-                tint = if (isFavorite) Color.Red else LocalContentColor.current
+                contentDescription = null,
+                tint = if (isFavorite) Color.Red else Color.White
             )
         }
     }
@@ -300,21 +252,18 @@ fun RingtoneListItem(
 @Composable
 fun HomePreview() {
     MaterialTheme(colorScheme = darkColorScheme()) {
-        Surface {
-            HomeScaffold(
-                uiState = HomeUiState(
-                    ringtones = listOf(
-                        Ringtone("1", "Summer Breeze", "Sunny Artist", "", "", "0:30", "Nature"),
-                        Ringtone("2", "Digital Horizon", "Tech Beats", "", "", "0:25", "Electronic"),
-                        Ringtone("3", "Morning Dew", "Calm Master", "", "", "0:45", "Classical")
-                    )
-                ),
-                onSearchClick = {},
-                onSettingsClick = {},
-                onRingtoneClick = {},
-                onSetRingtone = {},
-                onToggleFavorite = {}
-            )
-        }
+        HomeScaffold(
+            uiState = HomeUiState(
+                ringtones = listOf(
+                    Ringtone("1", "Summer Breeze", "Sunny Artist", "", "", "0:30", "Nature")
+                )
+            ),
+            onSearchClick = {},
+            onSettingsClick = {},
+            onRingtoneClick = {},
+            onSetRingtone = {},
+            onToggleFavorite = {},
+            onCategorySelected = {}
+        )
     }
 }
