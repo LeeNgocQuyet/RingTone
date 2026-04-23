@@ -1,23 +1,23 @@
 package com.example.ringtone.ui.navigation
 
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.ui.NavDisplay
 import com.example.ringtone.domain.model.Ringtone
 import com.example.ringtone.ui.screen.home.HomeScreen
 import com.example.ringtone.ui.screen.home.HomeViewModel
-import com.example.ringtone.ui.screen.search.SearchScreen
-import com.example.ringtone.ui.screen.search.SearchViewModel
 import com.example.ringtone.ui.screen.list.RingtoneListScreen
 import com.example.ringtone.ui.screen.list.RingtoneListViewModel
-import androidx.compose.material3.Text
+import com.example.ringtone.ui.screen.search.SearchScreen
+import com.example.ringtone.ui.screen.search.SearchViewModel
 
 @Composable
 fun AppNavGraph(
     backStack: List<Screen>,
     homeViewModel: HomeViewModel,
     searchViewModel: SearchViewModel,
-    downloadViewModel: Any?, // Replace with actual ViewModels when created
+    downloadViewModel: Any?,
     categoryViewModel: Any?,
     playlistViewModel: Any?,
     audioViewModel: Any?,
@@ -39,15 +39,13 @@ fun AppNavGraph(
                 )
             }
             Screen.Download -> NavEntry(Screen.Download) {
-                // DownloadScreen(viewModel = downloadViewModel)
+                // Sẽ thay bằng DownloadScreen khi bạn tạo file trong ui.screen.download
                 Text("Download Screen")
             }
             Screen.Category -> NavEntry(Screen.Category) {
-                // CategoryScreen(viewModel = categoryViewModel)
                 Text("Category Screen")
             }
             Screen.Playlist -> NavEntry(Screen.Playlist) {
-                // PlaylistScreen(viewModel = playlistViewModel)
                 Text("Playlist Screen")
             }
             Screen.Search -> NavEntry(Screen.Search) {
@@ -57,11 +55,9 @@ fun AppNavGraph(
                 )
             }
             is Screen.Audio -> NavEntry(screen) {
-                // AudioScreen(viewModel = audioViewModel, id = screen.ringtoneId)
                 Text("Audio Playing: ${screen.ringtoneId}")
             }
             is Screen.AudioInfo -> NavEntry(screen) {
-                // AudioInfoScreen(viewModel = audioInfoViewModel, id = screen.ringtoneId)
                 Text("Audio Info for: ${screen.ringtoneId}")
             }
             is Screen.List -> NavEntry(screen) {
