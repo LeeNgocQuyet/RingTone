@@ -12,7 +12,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.ringtone.domain.model.Ringtone
-import com.example.ringtone.ui.screen.home.RingtoneItem
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -71,7 +70,6 @@ fun RingtoneListContent(
                 contentPadding = PaddingValues(16.dp)
             ) {
                 items(uiState.ringtones) { ringtone ->
-                    RingtoneItem(ringtone, onPlayClick)
                 }
             }
         }

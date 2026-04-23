@@ -35,11 +35,14 @@ fun AppNavGraph(
             Screen.Home -> NavEntry(Screen.Home) {
                 HomeScreen(
                     viewModel = homeViewModel,
-                    onPlayClick = onPlayClick
+                    onSearchClick = { onNavigate(Screen.Search) },
+                    onRingtoneClick = { id -> onNavigate(Screen.Audio(id)) },
+                    onSettingsClick = { },
+                    onSetRingtone = { },
+                    onToggleFavorite = { },
                 )
             }
             Screen.Download -> NavEntry(Screen.Download) {
-                // Sẽ thay bằng DownloadScreen khi bạn tạo file trong ui.screen.download
                 Text("Download Screen")
             }
             Screen.Category -> NavEntry(Screen.Category) {
