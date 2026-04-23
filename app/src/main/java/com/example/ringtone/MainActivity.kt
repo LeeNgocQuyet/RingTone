@@ -52,7 +52,7 @@ class MainActivity : ComponentActivity() {
                             modelClass.isAssignableFrom(RingtoneListViewModel::class.java) -> RingtoneListViewModel(repository) as T
                             modelClass.isAssignableFrom(DownloadViewModel::class.java) -> DownloadViewModel(repository) as T
                             modelClass.isAssignableFrom(CategoryViewModel::class.java) -> CategoryViewModel() as T
-                            modelClass.isAssignableFrom(PlaylistViewModel::class.java) -> PlaylistViewModel() as T
+                            modelClass.isAssignableFrom(PlaylistViewModel::class.java) -> PlaylistViewModel(repository) as T
                             else -> throw IllegalArgumentException("Unknown ViewModel class")
                         }
                     }

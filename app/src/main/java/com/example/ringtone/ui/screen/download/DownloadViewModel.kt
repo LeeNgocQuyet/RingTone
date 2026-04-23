@@ -1,11 +1,13 @@
 package com.example.ringtone.ui.screen.download
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.ringtone.domain.model.Ringtone
 import com.example.ringtone.domain.repository.RingtoneRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 data class DownloadUiState(
     val linkUrl: String = "",
@@ -23,14 +25,11 @@ class DownloadViewModel(private val repository: RingtoneRepository) : ViewModel(
     }
 
     private fun loadHistory() {
-        // Initially using fake data from repository if available, or just dummy here
-        _uiState.value = _uiState.value.copy(
-            downloadHistory = listOf(
-                Ringtone("d1", "Tik Viral Hit 2024", "Unknown", "", "", "00:30", "TikTok"),
-                Ringtone("d2", "Chill Beat Lofi", "Lofi Girl", "", "", "00:45", "Lofi"),
-                Ringtone("d3", "Dramatic Impact", "SFX Master", "", "", "00:15", "SFX")
-            )
-        )
+        viewModelScope.launch {
+            repository.getDownloads().collect { history ->
+                _uiState.value = _uiState.value.copy(downloadHistory = history)
+            }
+        }
     }
 
     fun onLinkChanged(newLink: String) {

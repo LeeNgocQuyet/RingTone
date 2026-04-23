@@ -2,11 +2,9 @@ package com.example.ringtone.ui.screen.download
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -92,7 +90,6 @@ fun DownloadScaffold(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DownloadContent(
     modifier: Modifier = Modifier,
@@ -166,7 +163,6 @@ fun HeroDownloadCard(
             modifier = Modifier.padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
-
         ) {
             Text(
                 text = "Download Tik Audio",
@@ -186,11 +182,14 @@ fun HeroDownloadCard(
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = { Text("Paste Tik link here", color = Color.Gray) },
                 leadingIcon = { Icon(Icons.Default.Link, contentDescription = null, tint = LimeGreen) },
-                shape = RoundedCornerShape(50),colors = OutlinedTextFieldDefaults.colors(
+                shape = RoundedCornerShape(50),
+                colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = SoftPurple,
                     unfocusedBorderColor = Color.DarkGray,
                     focusedContainerColor = Color.Black,
-                    unfocusedContainerColor = Color.Black
+                    unfocusedContainerColor = Color.Black,
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White
                 ),
                 singleLine = true
             )
@@ -204,8 +203,8 @@ fun HeroDownloadCard(
                 shape = RoundedCornerShape(50)
             ) {
                 Text("Download Audio", color = Color.Black, fontWeight = FontWeight.Bold)
-                Icon(Icons.Default.Download, contentDescription = null, tint = Color.Black)
                 Spacer(modifier = Modifier.width(8.dp))
+                Icon(Icons.Default.Download, contentDescription = null, tint = Color.Black)
             }
         }
     }
@@ -288,8 +287,9 @@ fun DownloadPreview() {
         DownloadScaffold(
             uiState = DownloadUiState(
                 downloadHistory = listOf(
-                    Ringtone("p1", "Tik Viral Hit 2024", "", "", "", "00:30", ""),
-                    Ringtone("p2", "Lofi Sunset", "", "", "", "01:20", "")
+                    Ringtone("1", "Tik Viral Hit 2024", "Trending Music", "", "", "00:30", "TikTok"),
+                    Ringtone("5", "Chill Beat Lofi", "Lofi Girl", "", "", "01:20", "Lofi"),
+                    Ringtone("6", "Dramatic Impact", "SFX Master", "", "", "00:15", "SFX")
                 )
             ),
             onLinkChange = {},

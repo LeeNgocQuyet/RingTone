@@ -1,8 +1,8 @@
 package com.example.ringtone.ui.screen.playlist
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
@@ -19,7 +19,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.ringtone.R
+import com.example.ringtone.domain.model.Ringtone
+import com.example.ringtone.ui.component.RingtoneListItem
 
 private val LimeGreen = Color(0xFFD4FF5B)
 private val SoftPurple = Color(0xFFC5A3FF)
@@ -28,7 +29,10 @@ private val SoftPurple = Color(0xFFC5A3FF)
 fun PlaylistScreen(
     viewModel: PlaylistViewModel,
     onSettingsClick: () -> Unit,
-    onDownloadAudioClick: () -> Unit
+    onDownloadAudioClick: () -> Unit,
+    onRingtoneClick: (String) -> Unit,
+    onSetRingtone: (Ringtone) -> Unit,
+    onToggleFavorite: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -36,7 +40,10 @@ fun PlaylistScreen(
         uiState = uiState,
         onTabSelected = { viewModel.onTabSelected(it) },
         onSettingsClick = onSettingsClick,
-        onDownloadAudioClick = onDownloadAudioClick
+        onDownloadAudioClick = onDownloadAudioClick,
+        onRingtoneClick = onRingtoneClick,
+        onSetRingtone = onSetRingtone,
+        onToggleFavorite = onToggleFavorite
     )
 }
 
@@ -46,7 +53,10 @@ fun PlaylistScaffold(
     uiState: PlaylistUiState,
     onTabSelected: (PlaylistTab) -> Unit,
     onSettingsClick: () -> Unit,
-    onDownloadAudioClick: () -> Unit
+    onDownloadAudioClick: () -> Unit,
+    onRingtoneClick: (String) -> Unit,
+    onSetRingtone: (Ringtone) -> Unit,
+    onToggleFavorite: (String) -> Unit
 ) {
     Scaffold(
         containerColor = Color.Black,
@@ -96,11 +106,32 @@ fun PlaylistScaffold(
                 )
             }
 
-            // Empty State
-            if (uiState.items.isEmpty()) {
-                EmptyPlaylistView(onDownloadAudioClick)
-            } else {
-                // List of items
+            // Dùng Box để xử lý trạng thái Loading và List/Empty
+            Box(modifier = Modifier.fillMaxSize()) {
+                if (uiState.isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center),
+                        color = LimeGreen
+                    )
+                } else if (uiState.items.isEmpty()) {
+                    EmptyPlaylistView(onDownloadAudioClick)
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        contentPadding = PaddingValues(bottom = 16.dp)
+                    ) {
+                        items(uiState.items) { ringtone ->
+                            RingtoneListItem(
+                                ringtone = ringtone,
+                                isFavorite = uiState.favoriteIds.contains(ringtone.id),
+                                onClick = { onRingtoneClick(ringtone.id) },
+                                onSetClick = { onSetRingtone(ringtone) },
+                                onFavoriteToggle = { onToggleFavorite(ringtone.id) }
+                            )
+                        }
+                    }
+                }
             }
         }
     }
@@ -129,28 +160,24 @@ fun PlaylistTabItem(
 @Composable
 fun EmptyPlaylistView(onDownloadAudioClick: () -> Unit) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(bottom = 100.dp),
+        modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // Placeholder for the "sad face" icons in the image
-        Box(contentAlignment = Alignment.Center) {
-            Icon(
-                painter = painterResource(id = android.R.drawable.ic_menu_close_clear_cancel), // Placeholder
-                contentDescription = null,
-                tint = Color.DarkGray,
-                modifier = Modifier.size(120.dp)
-            )
-        }
+        // Placeholder Icon
+        Icon(
+            painter = painterResource(id = android.R.drawable.ic_menu_close_clear_cancel),
+            contentDescription = null,
+            tint = Color.DarkGray,
+            modifier = Modifier.size(100.dp)
+        )
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
         Text(
             text = "Empty here",
             color = Color.White,
-            fontSize = 22.sp,
+            fontSize = 20.sp,
             fontWeight = FontWeight.Bold
         )
 
@@ -163,7 +190,7 @@ fun EmptyPlaylistView(onDownloadAudioClick: () -> Unit) {
             modifier = Modifier.padding(horizontal = 32.dp)
         )
 
-        Spacer(modifier = Modifier.height(48.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
         Button(
             onClick = onDownloadAudioClick,
@@ -173,12 +200,7 @@ fun EmptyPlaylistView(onDownloadAudioClick: () -> Unit) {
             colors = ButtonDefaults.buttonColors(containerColor = SoftPurple),
             shape = RoundedCornerShape(50)
         ) {
-            Text(
-                text = "Download Audio",
-                color = Color.Black,
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
-            )
+            Text("Download Audio", color = Color.Black, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -187,9 +209,16 @@ fun EmptyPlaylistView(onDownloadAudioClick: () -> Unit) {
 @Composable
 fun PlaylistPreview() {
     PlaylistScaffold(
-        uiState = PlaylistUiState(),
+        uiState = PlaylistUiState(
+            items = listOf(
+                Ringtone("1", "Preview Song", "Artist", "", "", "00:30", "Test")
+            )
+        ),
         onTabSelected = {},
         onSettingsClick = {},
-        onDownloadAudioClick = {}
+        onDownloadAudioClick = {},
+        onRingtoneClick = {},
+        onSetRingtone = {},
+        onToggleFavorite = {}
     )
 }

@@ -67,7 +67,10 @@ fun AppNavGraph(
                 PlaylistScreen(
                     viewModel = playlistViewModel,
                     onSettingsClick = { /* Handle settings */ },
-                    onDownloadAudioClick = { onNavigate(Screen.Download) }
+                    onDownloadAudioClick = { onNavigate(Screen.Download) },
+                    onRingtoneClick = { id -> onNavigate(Screen.Audio(id)) },
+                    onSetRingtone = { /* Handle set ringtone logic */ },
+                    onToggleFavorite = { ringtoneId -> playlistViewModel.toggleFavorite(ringtoneId) }
                 )
             }
             Screen.Search -> NavEntry(Screen.Search) {
